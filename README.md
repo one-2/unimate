@@ -1,94 +1,97 @@
 # UniMate Backend (MVP)
 
-UniMate was a real-world MVP built by a second-year computer science student at UNSW. It aggregated and processed event data from student groups across the internet, using distributed proxies for scraping and GPT-based classification for semantic enrichment. The system ran live for over 1,500 users and was designed to validate product-market fit with minimal engineering overhead.
+I co-founded and solo-engineered UniMate in my second year of computer science. It aggregated and processed student events data from a variety of sources, providing students one place to see information about social activities at Sydney universities. It used a distributed proxy service for web scraping and a GPT text classifier to process events data into categories, which we served to users. The system served over 1,500 users, validating our product, before the university released a competing product. Unfortunately they didn't communicate their work on this to us when we contacted them. Nonetheless, this was a very education project. It gave me footing in quick engineering under competing business pressures, reinforced by the pressure of live users.
 
-🧊 This repo represents a cleaned and frozen version of the final push of the UniMate MVP. It is not under active development.
+This repo is a sanitised version of the final commit of UniMate's MVP. Development finished when we wound up the business.
 
-📝 [Read the retrospective](https://stelliott.online/2025/03/31/unimate-retrospective-of-a-first-time-engineering-founder/) for the full breakdown of the design process, tradeoffs, and lessons learned.
-
----
-
-## 🚀 What It Does
-
-- Scrapes club event data using Infatica proxies (residential/mobile IPs).
-- Parses inconsistent HTML structures with custom logic and resilient regex-based strategies.
-- Enriches raw event data using GPT-3.5 for multi-label classification.
-- Outputs structured CSVs and binary dumps.
-- Supports manual overrides, partial restarts, and cached recovery.
-- Uses a no-code frontend for minimal deployment complexity.
+[You may also wish to read the retrospective](https://stelliott.online/2025/03/31/unimate-retrospective-of-a-first-time-engineering-founder/) for more information on the engineering process and its lessons.
 
 ---
 
-## 🧱 Architecture
+## What It Does
+
+- Scrapes data on club events from a variety of sources using Infatica proxies.
+- Parsed and regularised HTML data.
+- Classified text into bins for user filtering using the OpenAI API.
+- Dumps processed data to CSV and binary for partial-restarts.
+- Terminal frontend for ease-of-use.
+
+---
+
+## Pipeline Architecture
 
 scraper/ \
 ├── Scraper.py → Entry point for scraping club and event pages \
-├── Scripts.py → Modular extractors for embedded script data \
-├── InfaticaRequests.py → Proxy-based HTTP layer 
+├── Scripts.py → Extracts data from dynamically loaded web content \
+├── InfaticaRequests.py → Calls the proxies
 
 processor/ \
-├── Tagger.py → GPT-based multi-label classifier 
+├── Tagger.py → Classify event descriptions using OpenAI API
 
 utils/ \
-├── Parser.py → HTML substring and regex extraction \
-├── Utils.py → Date handling, sleep logic, URL checks 
+├── Parser.py → Methods for parsing HTML \
+├── Utils.py → Date handling and URL validation 
 
 io/ \
-├── Filesystem.py → Handles all folder and file structure \
+├── Filesystem.py → Centralised handling of file structure \
 ├── Input.py → Reads from saved files and dumps \
-├── Output.py → Writes data to disk (CSV, binary) 
+├── Output.py → Writes CSV and binaries to disk 
 
 config/ \
 ├── Config.py → Prompts and constants \
-├── Env.py → Shared imports 
+├── Env.py
 
 core/ \
-├── Interface.py → CLI interaction and control logic \
-├── Debug.py → Test utilities 
+├── Interface.py → Logic for the command-line interface \
+├── Debug.py → Test methods
 
 
 ---
 
-## ⚙️ Setup
+## Setup
 
-> **Warning:** This repo contains *legacy MVP code*. It was designed for fast iteration, not safety or polish.
+Note that this was an MVP and it was designed for speed rather than safety or reliability. Proceed at your own risk.
 
-1. **Clone the repo**
+1. Clone the repo
 2. Set your `infatica_api_key` in `Config.py`  
-   *(you should remove or mock this if publishing your version)*  
-3. Run `Interface.py` to begin CLI-driven scraping and tagging.
+3. Run `Interface.py` to launc the CLI
 
-You’ll need:
+Dependencies:
 - Python 3.9+
 - OpenAI API key (for `Tagger.py`)
 - A valid Infatica account if testing live scraping
 
 ---
 
-## 🧠 Design Patterns Used
+## Design Patterns
 
-- **Pipeline Pattern** – Cleanly separated data stages: scraping → processing → output
-- **Strategy Pattern** – GPT taggers encapsulated as binary classifiers
-- **Factory Pattern (lightweight)** – Filesystem handles path generation
-- **CLI Controller** – User input drives pipeline selection
-- **Observer-like Logging** – Post-mortem debugging with HTML dumps
-
----
-
-## 🧪 Known Limitations
-
-- No formal test suite. It's all manual, via CLI and prints
-- API keys were originally stored in plain text
-- Minimal error handling and no logging framework
-- Single-threaded, non-concurrent scraping
-- Not intended for production deployment
+- **Pipeline** - Modules include Input, Scraper, Processor, and Output, chained in sequence
+- **Strategy** - GPT binary classifiers called using a common interface
+- **Factory** - Centralised filesystem manager is a path-building factory
+- **Controller** - CLI decides pipeline construction
+- **Observer-like Logging**
 
 ---
 
-## 📚 Related Reading
+## 📉 Tradeoffs
 
-For context, lessons learned, and a full breakdown of tradeoffs:  
-👉 [UniMate: Retrospective of a First-Time Engineering Founder](https://stelliott.online/2025/03/31/unimate-retrospective-of-a-first-time-engineering-founder/)
+| **Decision**                | **Rationale**                             | **Cost**                                       |
+|-----------------------------|-------------------------------------------|------------------------------------------------|
+| No Selenium                 | It didn't work well on our target sites   | More fragile                                   |
+| No database                 | Fast iteration, simple output             | Harder to scale and query                      |
+| OpenAI tagging via GPT      | Fast to implement and worked              | Could get expensive                            |
+| Single-threaded scraping    | Easier to implement                       | Impracticably slow                             |
+| No automatic tests          | Faster new code                           | Slower refactoring of old code                 |
+
+---
+
+## 🔄 Future Improvements
+
+- Better logging and more exception handling
+- Async scraping  
+- Unit and integration tests  
+- Replace CSV-based workflows with a database
+- Use a minimal backend like FastAPI to handle automatic upload to the frontend 
 
 ---
 
